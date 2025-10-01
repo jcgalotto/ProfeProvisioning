@@ -31,14 +31,25 @@ def _load_documents():
     return docs
 
 
-def _get_embeddings():
-    if settings.EMBEDDINGS_PROVIDER == "openai":
-        base = OpenAIEmbeddings(model=settings.EMBEDDINGS_MODEL)
-    else:
+def _base_embeddings():
+    provider = settings.EMBEDDINGS_PROVIDER.lower()
+    if provider == "openai":
+        if not settings.OPENAI_API_KEY:
+            raise RuntimeError(
+                "OPENAI_API_KEY no configurada y EMBEDDINGS_PROVIDER=openai. "
+                "Definí la key en .env o cambiá EMBEDDINGS_PROVIDER a 'hf'."
+            )
+        return OpenAIEmbeddings(model=settings.EMBEDDINGS_MODEL, api_key=settings.OPENAI_API_KEY)
+    elif provider == "hf":
         if HuggingFaceEmbeddings is None:
-            raise RuntimeError("Instala sentence-transformers para usar HF embeddings")
-        base = HuggingFaceEmbeddings(model_name=settings.EMBEDDINGS_MODEL)
+            raise RuntimeError("Instalá 'sentence-transformers' para usar HuggingFaceEmbeddings")
+        return HuggingFaceEmbeddings(model_name=settings.EMBEDDINGS_MODEL)
+    else:
+        raise ValueError(f"Provider de embeddings no soportado: {provider}")
 
+
+def _get_embeddings():
+    base = _base_embeddings()
     store = InMemoryByteStore()
     return CacheBackedEmbeddings.from_bytes_store(base, store)
 

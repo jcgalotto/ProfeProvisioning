@@ -5,7 +5,7 @@ load_dotenv()
 
 
 class Settings:
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "").strip()
     LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
     LLM_MODEL = os.getenv("LLM_MODEL", "gpt-4o-mini")
 
